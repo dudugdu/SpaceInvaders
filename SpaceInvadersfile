@@ -451,4 +451,75 @@ class SpaceInvaders(object):
         self.tela.blit(self.inimigo3, (318, 370))
         self.tela.blit(self.inimigo4, (299, 420))
 
+    def verifica_colisoes(self):
+        sprite.groupcollide(self.bullets, self.inimigoTiros, True, True)
+
+        for inimigo in sprite.groupcollide(self.enemies, self.bullets, True, True).keys():
+            self.sounds['invaderkilled'].play()
+            self.calcula_pontuacao(inimigo.linha)
+            InimigoExplosao(inimigo, self.explosaosGroup)
+            self.gameTimer = time.get_ticks()
+
+        for mystery in sprite.groupcollide(self.mysteryGroup, self.bullets, True, True).keys():
+            mystery.mysteryEntered.stop()
+            self.sounds['mysterykilled'].play()
+            score = self.calcula_pontuacao(mystery.linha)
+            MisterioExplosao(mystery, score, self.explosaosGroup)
+            newNave = Mystery()
+            self.allSprites.add(newNave)
+            self.mysteryGroup.add(newNave)
+
+        for player in sprite.groupcollide(self.playerGroup, self.inimigoTiros, True, True).keys():
+            if self.life3.alive():
+                self.life3.kill()
+            elif self.life2.alive():
+                self.life2.kill()
+            elif self.life1.alive():
+                self.life1.kill()
+            else:
+                self.gameOver = True
+                self.startGame = False
+            self.sounds['naveexplosao'].play()
+            NaveExplosao(player, self.explosaosGroup)
+            self.construiNovaNave = True
+            self.naveTimer = time.get_ticks()
+            self.naveAtiva = False
+
+        if self.enemies.bottom >= 540:
+            sprite.groupcollide(self.enemies, self.playerGroup, True, True)
+            if not self.player.alive() or self.enemies.bottom >= 600:
+                self.gameOver = True
+                self.startGame = False
+
+        sprite.groupcollide(self.bullets, self.allBloqueadors, True, True)
+        sprite.groupcollide(self.inimigoTiros, self.allBloqueadors, True, True)
+        if self.enemies.bottom >= header.BLOQUEADORES_POSICAO:
+            sprite.groupcollide(self.enemies, self.allBloqueadors, False, True)
+
+    def cria_nova_nave(self, createNave, currentTime):
+        if createNave and (currentTime - self.naveTimer > 900):
+            self.player = Nave()
+            self.allSprites.add(self.player)
+            self.playerGroup.add(self.player)
+            self.construiNovaNave = False
+            self.naveAtiva = True
+
+    def exibe_game_over(self, currentTime):
+        self.tela.blit(self.fundo, (0, 0))
+        passed = currentTime - self.timer
+        if passed < 750:
+            self.textoGameOver.draw(self.tela)
+        elif 750 < passed < 1500:
+            self.tela.blit(self.fundo, (0, 0))
+        elif 1500 < passed < 2250:
+            self.textoGameOver.draw(self.tela)
+        elif 2250 < passed < 2750:
+            self.tela.blit(self.fundo, (0, 0))
+        elif passed > 3000:
+            self.mainScreen = True
+
+        for e in event.get():
+            if self.should_exit(e):
+                sys.exit()
+
 
