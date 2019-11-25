@@ -58,3 +58,119 @@ class Tiro(sprite.Sprite):
         if self.rect.y < 15 or self.rect.y > 600:
             self.kill()
 
+class Inimigo(sprite.Sprite):
+    def __init__(self, linha, coluna):
+        sprite.Sprite.__init__(self)
+        self.linha = linha
+        self.coluna = coluna
+        self.images = []
+        self.load_images()
+        self.index = 0
+        self.image = self.images[self.index]
+        self.rect = self.image.get_rect()
+
+    def toggle_image(self):
+        self.index += 1
+        if self.index >= len(self.images):
+            self.index = 0
+        self.image = self.images[self.index]
+
+    def update(self, *args):
+        game.tela.blit(self.image, self.rect)
+
+    def load_images(self):
+        images = {0: ['1_2', '1_1'], 1: ['2_2', '2_1'], 2: ['2_2', '2_1'], 3: ['3_1', '3_2'], 4: ['3_1', '3_2']}
+        img1, img2 = (header.IMAGES['inimigo{}'.format(img_num)] for img_num in images[self.linha])
+        self.images.append(transform.scale(img1, (40, 35)))
+        self.images.append(transform.scale(img2, (40, 35)))
+
+
+class GrupoInimigos(sprite.Group):
+    def __init__(self, colunas, linhas):
+        sprite.Group.__init__(self)
+        self.enemies = [[None] * colunas for _ in range(linhas)]
+        self.colunas = colunas
+        self.linhas = linhas
+        self.leftAddMove = 0
+        self.rightAddMove = 0
+        self.moveTime = 600
+        self.direcao = 1
+        self.rightMoves = 30
+        self.leftMoves = 30
+        self.moveNumber = 15
+        self.timer = time.get_ticks()
+        self.bottom = game.inimigoPosition + ((linhas - 1) * 45) + 35
+        self._aliveColumns = list(range(colunas))
+        self._leftAliveColumn = 0
+        self._rightAliveColumn = colunas - 1
+
+    def update(self, current_time):
+        if current_time - self.timer > self.moveTime:
+            if self.direcao == 1:
+                max_move = self.rightMoves + self.rightAddMove
+            else:
+                max_move = self.leftMoves + self.leftAddMove
+
+            if self.moveNumber >= max_move:
+                self.leftMoves = 30 + self.rightAddMove
+                self.rightMoves = 30 + self.leftAddMove
+                self.direcao *= -1
+                self.moveNumber = 0
+                self.bottom = 0
+                for inimigo in self:
+                    inimigo.rect.y += header.INIMIGO_MOVE_BAIXO
+                    inimigo.toggle_image()
+                    if self.bottom < inimigo.rect.y + 35:
+                        self.bottom = inimigo.rect.y + 35
+            else:
+                velocity = 10 if self.direcao == 1 else -10
+                for inimigo in self:
+                    inimigo.rect.x += velocity
+                    inimigo.toggle_image()
+                self.moveNumber += 1
+
+            self.timer += self.moveTime
+
+    def add_internal(self, *sprites):
+        super(GrupoInimigos, self).add_internal(*sprites)
+        for s in sprites:
+            self.enemies[s.linha][s.coluna] = s
+
+    def remove_internal(self, *sprites):
+        super(GrupoInimigos, self).remove_internal(*sprites)
+        for s in sprites:
+            self.kill(s)
+        self.update_velocidade()
+
+    def is_coluna_dead(self, coluna):
+        return not any(self.enemies[linha][coluna] for linha in range(self.linhas))
+
+    def random_bottom(self):
+        col = choice(self._aliveColumns)
+        col_enemies = (self.enemies[linha - 1][col] for linha in range(self.linhas, 0, -1))
+        return next((en for en in col_enemies if en is not None), None)
+
+    def update_velocidade(self):
+        if len(self) == 1:
+            self.moveTime = 200
+        elif len(self) <= 10:
+            self.moveTime = 400
+
+    def kill(self, inimigo):
+        self.enemies[inimigo.linha][inimigo.coluna] = None
+        is_coluna_dead = self.is_coluna_dead(inimigo.coluna)
+        if is_coluna_dead:
+            self._aliveColumns.remove(inimigo.coluna)
+
+        if inimigo.coluna == self._rightAliveColumn:
+            while self._rightAliveColumn > 0 and is_coluna_dead:
+                self._rightAliveColumn -= 1
+                self.rightAddMove += 5
+                is_coluna_dead = self.is_coluna_dead(self._rightAliveColumn)
+
+        elif inimigo.coluna == self._leftAliveColumn:
+            while self._leftAliveColumn < self.colunas and is_coluna_dead:
+                self._leftAliveColumn += 1
+                self.leftAddMove += 5
+                is_coluna_dead = self.is_coluna_dead(self._leftAliveColumn)
+
