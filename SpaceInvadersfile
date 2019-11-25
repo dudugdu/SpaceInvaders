@@ -522,4 +522,74 @@ class SpaceInvaders(object):
             if self.should_exit(e):
                 sys.exit()
 
+    def main(self):
+        while True:
+            if self.mainScreen:
+                self.tela.blit(self.fundo, (0, 0))
+                self.titleText.draw(self.tela)
+                self.titleText2.draw(self.tela)
+                self.inimigo1Text.draw(self.tela)
+                self.inimigo2Text.draw(self.tela)
+                self.inimigo3Text.draw(self.tela)
+                self.inimigo4Text.draw(self.tela)
+                self.cria_menu_principal()
+                for e in event.get():
+                    if self.should_exit(e):
+                        sys.exit()
+                    if e.type == KEYUP:
+
+                        self.allBloqueadors = sprite.Group(self.cria_bloqueadores(0), self.cria_bloqueadores(1), self.cria_bloqueadores(2), self.cria_bloqueadores(3))
+                        self.livesGroup.add(self.life1, self.life2, self.life3)
+                        self.reset(0)
+                        self.startGame = True
+                        self.mainScreen = False
+
+            elif self.startGame:
+                if not self.enemies and not self.explosaosGroup:
+                    currentTime = time.get_ticks()
+                    if currentTime - self.gameTimer < 3000:
+                        self.tela.blit(self.fundo, (0, 0))
+                        self.scoreText2 = Text(header.FONT, 20, str(self.score), header.VERDE, 85, 5)
+                        self.scoreText.draw(self.tela)
+                        self.scoreText2.draw(self.tela)
+                        self.nextRoundText.draw(self.tela)
+                        self.livesText.draw(self.tela)
+                        self.livesGroup.update()
+                        self.verifica_entrada()
+                    if currentTime - self.gameTimer > 3000:
+                        # Aqui os inimigos vao se aproximando do chao
+                        self.inimigoPosition += header.INIMIGO_MOVE_BAIXO
+                        self.reset(self.score)
+                        self.gameTimer += 3000
+                else:
+                    currentTime = time.get_ticks()
+                    self.musica_principal(currentTime)
+                    self.tela.blit(self.fundo, (0, 0))
+                    self.allBloqueadors.update(self.tela)
+                    self.scoreText2 = Text(header.FONT, 20, str(self.score), header.VERDE, 85, 5)
+                    self.scoreText.draw(self.tela)
+                    self.scoreText2.draw(self.tela)
+                    self.livesText.draw(self.tela)
+                    self.verifica_entrada()
+                    self.enemies.update(currentTime)
+                    self.allSprites.update(self.keys, currentTime)
+                    self.explosaosGroup.update(currentTime)
+                    self.verifica_colisoes()
+                    self.cria_nova_nave(self.construiNovaNave, currentTime)
+                    self.construi_inimigos_tiro()
+
+            elif self.gameOver:
+                currentTime = time.get_ticks()
+                # Aqui os inimigos sao resetados para posicao inicial
+                self.inimigoPosition = header.POSICAO_PADRAO_INIMIGO
+                self.exibe_game_over(currentTime)
+
+            display.update()
+            self.clock.tick(60)
+
+
+if __name__ == '__main__':
+    game = SpaceInvaders()
+    game.main()
+
 
