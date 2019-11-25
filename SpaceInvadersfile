@@ -255,3 +255,53 @@ class InimigoExplosao(sprite.Sprite):
         elif 400 < passed:
             self.kill()
 
+class MisterioExplosao(sprite.Sprite):
+    def __init__(self, mystery, score, *groups):
+        super(MisterioExplosao, self).__init__(*groups)
+        self.text = Text(header.FONT, 20, str(score), header.BRANCO, mystery.rect.x + 20, mystery.rect.y + 6)
+        self.timer = time.get_ticks()
+
+    def update(self, current_time, *args):
+        passed = current_time - self.timer
+        if passed <= 200 or 400 < passed <= 600:
+            self.text.draw(game.tela)
+        elif 600 < passed:
+            self.kill()
+
+
+class NaveExplosao(sprite.Sprite):
+    def __init__(self, nave, *groups):
+        super(NaveExplosao, self).__init__(*groups)
+        self.image = header.IMAGES['nave']
+        self.rect = self.image.get_rect(topleft=(nave.rect.x, nave.rect.y))
+        self.timer = time.get_ticks()
+
+    def update(self, current_time, *args):
+        passed = current_time - self.timer
+        if 300 < passed <= 600:
+            game.tela.blit(self.image, self.rect)
+        elif 900 < passed:
+            self.kill()
+
+
+class Vida(sprite.Sprite):
+    def __init__(self, xpos, ypos):
+        sprite.Sprite.__init__(self)
+        self.image = header.IMAGES['nave']
+        self.image = transform.scale(self.image, (23, 23))
+        self.rect = self.image.get_rect(topleft=(xpos, ypos))
+
+    def update(self, *args):
+        game.tela.blit(self.image, self.rect)
+
+
+class Text(object):
+    def __init__(self, textFont, size, message, color, xpos, ypos):
+        self.font = font.Font(textFont, size)
+        self.surface = self.font.render(message, True, color)
+        self.rect = self.surface.get_rect(topleft=(xpos, ypos))
+
+    def draw(self, surface):
+        surface.blit(self.surface, self.rect)
+
+
