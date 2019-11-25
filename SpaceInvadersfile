@@ -385,5 +385,70 @@ class SpaceInvaders(object):
 
             self.note.play()
             self.noteTimer += self.enemies.moveTime
+# Pedimos ajuda aqui
+    @staticmethod
+    def should_exit(evt):
+        # type: (pygame.event.EventType) -> bool
+        return evt.type == QUIT or (evt.type == KEYUP and evt.key == K_ESCAPE)
+
+    def verifica_entrada(self):
+        self.keys = key.get_pressed()
+        for e in event.get():
+            if self.should_exit(e):
+                sys.exit()
+            if e.type == KEYDOWN:
+                if e.key == K_SPACE:
+                    if len(self.bullets) == 0 and self.naveAtiva:
+                        if self.score < 1000:       # Se voce atinge uma pontuacao maior que mil pontos, vc ganha tiros duplos
+                            bullet = Tiro(self.player.rect.x + 23, self.player.rect.y + 5, -1, 15, 'laser', 'center')
+                            self.bullets.add(bullet)
+                            self.allSprites.add(self.bullets)
+                            self.sounds['shoot'].play()
+                        else:
+                            leftbullet = Tiro(self.player.rect.x + 8, self.player.rect.y + 5, -1, 15, 'laser', 'left')
+                            rightbullet = Tiro(self.player.rect.x + 38, self.player.rect.y + 5, -1, 15, 'laser', 'right')
+                            self.bullets.add(leftbullet)
+                            self.bullets.add(rightbullet)
+                            self.allSprites.add(self.bullets)
+                            self.sounds['shoot2'].play()
+
+    def construi_inimigos(self):
+        enemies = GrupoInimigos(10, 5)
+        for linha in range(5):
+            for coluna in range(10):
+                inimigo = Inimigo(linha, coluna)
+                inimigo.rect.x = 157 + (coluna * 50)
+                inimigo.rect.y = self.inimigoPosition + (linha * 45)
+                enemies.add(inimigo)
+
+        self.enemies = enemies
+
+    def construi_inimigos_tiro(self):
+        if (time.get_ticks() - self.timer) > 700 and self.enemies:
+            inimigo = self.enemies.random_bottom()
+            self.inimigoTiros.add(Tiro(inimigo.rect.x + 14, inimigo.rect.y + 20, 1, 5, 'inimigolaser', 'center'))
+            self.allSprites.add(self.inimigoTiros)
+            self.timer = time.get_ticks()
+
+    def calcula_pontuacao(self, linha):
+        scores = {0: 30, 1: 20, 2: 20, 3: 10, 4: 10,5: choice([50, 100, 150, 300])}
+
+        score = scores[linha]
+        self.score += score
+        return score
+
+    def cria_menu_principal(self):
+        self.inimigo1 = header.IMAGES['inimigo3_1']
+        self.inimigo1 = transform.scale(self.inimigo1, (40, 40))
+        self.inimigo2 = header.IMAGES['inimigo2_2']
+        self.inimigo2 = transform.scale(self.inimigo2, (40, 40))
+        self.inimigo3 = header.IMAGES['inimigo1_2']
+        self.inimigo3 = transform.scale(self.inimigo3, (40, 40))
+        self.inimigo4 = header.IMAGES['mystery']
+        self.inimigo4 = transform.scale(self.inimigo4, (80, 40))
+        self.tela.blit(self.inimigo1, (318, 270))
+        self.tela.blit(self.inimigo2, (318, 320))
+        self.tela.blit(self.inimigo3, (318, 370))
+        self.tela.blit(self.inimigo4, (299, 420))
 
 
