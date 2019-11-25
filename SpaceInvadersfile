@@ -6,28 +6,6 @@ from os.path import abspath, dirname
 from random import choice
 import header
 
-BASE_PATH = abspath(dirname(__file__))
-FONT_PATH = BASE_PATH + '/fonts/'
-IMAGE_PATH = BASE_PATH + '/images/'
-SOUND_PATH = BASE_PATH + '/sounds/'
-
-# Cores (R, G, B)
-BRANCO = (255, 255, 255)
-VERDE = (78, 255, 87)
-AMARELO = (241, 255, 0)
-AZUL = (80, 255, 239)
-ROXO = (203, 0, 255)
-VERMELHO = (237, 28, 36)
-
-TELA = display.set_mode((800, 600))
-FONT = FONT_PATH + 'space_invaders.ttf'
-IMG_NAMES = ['nave', 'mystery', 'inimigo1_1', 'inimigo1_2', 'inimigo2_1', 'inimigo2_2', 'inimigo3_1', 'inimigo3_2', 'explosaoazul', 'explosaoverde', 'explosaoroxo', 'laser', 'inimigolaser']
-IMAGES = {name: image.load(IMAGE_PATH + '{}.png'.format(name)).convert_alpha() for name in IMG_NAMES}
-
-BLOQUEADORES_POSICAO = 450
-POSICAO_PADRAO_INIMIGO = 65
-INIMIGO_MOVE_BAIXO = 35
-
 class Nave(sprite.Sprite):
     def __init__(self):
         sprite.Sprite.__init__(self)
