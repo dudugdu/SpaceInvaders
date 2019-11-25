@@ -174,3 +174,84 @@ class GrupoInimigos(sprite.Group):
                 self.leftAddMove += 5
                 is_coluna_dead = self.is_coluna_dead(self._leftAliveColumn)
 
+
+class Bloqueador(sprite.Sprite):
+    def __init__(self, size, color, linha, coluna):
+        sprite.Sprite.__init__(self)
+        self.height = size
+        self.width = size
+        self.color = color
+        self.image = Surface((self.width, self.height))
+        self.image.fill(self.color)
+        self.rect = self.image.get_rect()
+        self.linha = linha
+        self.coluna = coluna
+
+    def update(self, keys, *args):
+        game.tela.blit(self.image, self.rect)
+
+
+class Mystery(sprite.Sprite):
+    def __init__(self):
+        sprite.Sprite.__init__(self)
+        self.image = header.IMAGES['mystery']
+        self.image = transform.scale(self.image, (75, 35))
+        self.rect = self.image.get_rect(topleft=(-80, 45))
+        self.linha = 5
+        self.moveTime = 25000
+        self.direcao = 1
+        self.timer = time.get_ticks()
+        self.mysteryEntered = mixer.Sound(header.SOUND_PATH + 'mysteryentered.wav')
+        self.mysteryEntered.set_volume(0.3)
+        self.playSound = True
+
+    def update(self, keys, currentTime, *args):
+        resetTimer = False
+        passed = currentTime - self.timer
+        if passed > self.moveTime:
+            if (self.rect.x < 0 or self.rect.x > 800) and self.playSound:
+                self.mysteryEntered.play()
+                self.playSound = False
+            if self.rect.x < 840 and self.direcao == 1:
+                self.mysteryEntered.fadeout(4000)
+                self.rect.x += 2
+                game.tela.blit(self.image, self.rect)
+            if self.rect.x > -100 and self.direcao == -1:
+                self.mysteryEntered.fadeout(4000)
+                self.rect.x -= 2
+                game.tela.blit(self.image, self.rect)
+
+        if self.rect.x > 830:
+            self.playSound = True
+            self.direcao = -1
+            resetTimer = True
+        if self.rect.x < -90:
+            self.playSound = True
+            self.direcao = 1
+            resetTimer = True
+        if passed > self.moveTime and resetTimer:
+            self.timer = currentTime
+
+
+class InimigoExplosao(sprite.Sprite):
+    def __init__(self, inimigo, *groups):
+        super(InimigoExplosao, self).__init__(*groups)
+        self.image = transform.scale(self.get_image(inimigo.linha), (40, 35))
+        self.image2 = transform.scale(self.get_image(inimigo.linha), (50, 45))
+        self.rect = self.image.get_rect(topleft=(inimigo.rect.x, inimigo.rect.y))
+        self.timer = time.get_ticks()
+# Pedimos ajuda aqui
+    @staticmethod
+    def get_image(linha):
+        img_colors = ['roxo', 'azul', 'azul', 'verde', 'verde']
+        return header.IMAGES['explosao{}'.format(img_colors[linha])]
+
+    def update(self, current_time, *args):
+        passed = current_time - self.timer
+        if passed <= 100:
+            game.tela.blit(self.image, self.rect)
+        elif passed <= 200:
+            game.tela.blit(self.image2, (self.rect.x - 6, self.rect.y - 6))
+        elif 400 < passed:
+            self.kill()
+
